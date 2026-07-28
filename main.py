@@ -416,126 +416,19 @@ def limpiar_proyectiles():
 
 
 # ==========================================
-# CONTROLES Y LÓGICA DE INICIO
+# MENÚ Y PANTALLA DE INICIO
 # ==========================================
-def mover_arriba():
-    if estado_juego == "JUGANDO" and heroe.ycor() < 240:
-        heroe.ir_a(heroe.xcor(), heroe.ycor() + 20, angulo_capa=270)
-
-
-def mover_abajo():
-    if estado_juego == "JUGANDO" and heroe.ycor() > -240:
-        heroe.ir_a(heroe.xcor(), heroe.ycor() - 20, angulo_capa=90)
-
-
-def mover_izquierda():
-    if estado_juego == "JUGANDO" and heroe.xcor() > -340:
-        heroe.ir_a(heroe.xcor() - 20, heroe.ycor(), angulo_capa=0)
-
-
-def mover_derecha():
-    if estado_juego == "JUGANDO" and heroe.xcor() < 340:
-        heroe.ir_a(heroe.xcor() + 20, heroe.ycor(), angulo_capa=180)
-
-
-def realizar_ataque():
-    global atacando
-    if estado_juego == "JUGANDO" and not atacando:
-        atacando = True
-
-
-def alternar_pausa():
-    global estado_juego
-    if estado_juego == "JUGANDO":
-        estado_juego = "PAUSA"
-    elif estado_juego == "PAUSA":
-        estado_juego = "JUGANDO"
-
-
-def salir_al_titulo():
-    global estado_juego
-    if estado_juego in ["JUGANDO", "PAUSA"]:
-        limpiar_proyectiles()
-        muro_fuego.clear()
-        hud.clear()
-        dialogo.clear()
-
-        heroe.ocultar()
-        demonio.ocultar()
-        espada.hideturtle()
-
-        ventana.bgcolor("#0a0510")
-        estado_juego = "INICIO"
-        mostrar_menu()
-
-
-def iniciar_modo_juego(modo):
-    global estado_juego, salud_heroe, salud_demonio, modo_actual
-    modo_actual = modo
-    estado_juego = "JUGANDO"
-    titulo_txt.clear()
-
-    if modo_actual == "DEMON":
-        salud_heroe = 1000  # 1000 de vida en Demon Mode
-        salud_demonio = 100000
-    else:
-        salud_heroe = MAX_SALUD_HEROE
-        salud_demonio = MAX_SALUD_DEMONIO
-
-    dibujar_escenario_topdown()
-    demonio.restaurar_colores_demonio()
-
-    heroe.ir_a(-220, 0, angulo_capa=180)
-    heroe.mostrar()
-
-    demonio.ir_a(220, 0)
-    demonio.mostrar()
-
-
-def procesar_enter():
-    global estado_juego
-    if estado_juego == "INICIO":
-        iniciar_modo_juego("NORMAL")
-
-    elif estado_juego in ["FIN_VICTORIA", "FIN_DERROTA"]:
-        limpiar_proyectiles()
-        muro_fuego.clear()
-        hud.clear()
-        dialogo.clear()
-
-        heroe.ocultar()
-        demonio.ocultar()
-        espada.hideturtle()
-
-        ventana.bgcolor("#0a0510")
-        estado_juego = "INICIO"
-        mostrar_menu()
-
-
-def procesar_w():
-    global estado_juego
-    if estado_juego == "INICIO" and demon_mode_desbloqueado:
-        iniciar_modo_juego("DEMON")
-
-
-ventana.listen()
-ventana.onkeypress(mover_arriba, "Up")
-ventana.onkeypress(mover_abajo, "Down")
-ventana.onkeypress(mover_izquierda, "Left")
-ventana.onkeypress(mover_derecha, "Right")
-ventana.onkeypress(realizar_ataque, "space")
-ventana.onkeypress(alternar_pausa, "z")
-ventana.onkeypress(alternar_pausa, "Z")
-ventana.onkeypress(salir_al_titulo, "x")
-ventana.onkeypress(salir_al_titulo, "X")
-ventana.onkeypress(procesar_enter, "Return")
-ventana.onkeypress(procesar_w, "w")
-ventana.onkeypress(procesar_w, "W")
-
-
 def mostrar_menu():
     ventana.bgcolor("#0a0510")
+    muro_fuego.clear()
+    hud.clear()
+    dialogo.clear()
     titulo_txt.clear()
+
+    heroe.ocultar()
+    demonio.ocultar()
+    espada.hideturtle()
+
     titulo_txt.goto(0, 110)
     titulo_txt.color("orange")
     titulo_txt.write(
@@ -578,10 +471,113 @@ def mostrar_menu():
     )
 
 
+# ==========================================
+# CONTROLES Y LÓGICA DE JUEGO
+# ==========================================
+def mover_arriba():
+    if estado_juego == "JUGANDO" and heroe.ycor() < 240:
+        heroe.ir_a(heroe.xcor(), heroe.ycor() + 20, angulo_capa=270)
+
+
+def mover_abajo():
+    if estado_juego == "JUGANDO" and heroe.ycor() > -240:
+        heroe.ir_a(heroe.xcor(), heroe.ycor() - 20, angulo_capa=90)
+
+
+def mover_izquierda():
+    if estado_juego == "JUGANDO" and heroe.xcor() > -340:
+        heroe.ir_a(heroe.xcor() - 20, heroe.ycor(), angulo_capa=0)
+
+
+def mover_derecha():
+    if estado_juego == "JUGANDO" and heroe.xcor() < 340:
+        heroe.ir_a(heroe.xcor() + 20, heroe.ycor(), angulo_capa=180)
+
+
+def realizar_ataque():
+    global atacando
+    if estado_juego == "JUGANDO" and not atacando:
+        atacando = True
+
+
+def alternar_pausa():
+    global estado_juego
+    if estado_juego == "JUGANDO":
+        estado_juego = "PAUSA"
+    elif estado_juego == "PAUSA":
+        estado_juego = "JUGANDO"
+
+
+def salir_al_titulo():
+    global estado_juego
+    if estado_juego in ["JUGANDO", "PAUSA"]:
+        limpiar_proyectiles()
+        estado_juego = "INICIO"
+        mostrar_menu()
+
+
+def iniciar_modo_juego(modo):
+    global estado_juego, salud_heroe, salud_demonio, modo_actual
+    modo_actual = modo
+    estado_juego = "JUGANDO"
+    
+    titulo_txt.clear()
+    hud.clear()
+    dialogo.clear()
+
+    if modo_actual == "DEMON":
+        salud_heroe = 1000
+        salud_demonio = 100000
+    else:
+        salud_heroe = MAX_SALUD_HEROE
+        salud_demonio = MAX_SALUD_DEMONIO
+
+    dibujar_escenario_topdown()
+    demonio.restaurar_colores_demonio()
+
+    heroe.ir_a(-220, 0, angulo_capa=180)
+    heroe.mostrar()
+
+    demonio.ir_a(220, 0)
+    demonio.mostrar()
+
+
+def procesar_enter():
+    global estado_juego
+    if estado_juego == "INICIO":
+        iniciar_modo_juego("NORMAL")
+
+    elif estado_juego in ["FIN_VICTORIA", "FIN_DERROTA"]:
+        limpiar_proyectiles()
+        estado_juego = "INICIO"
+        mostrar_menu()
+
+
+def procesar_w():
+    global estado_juego
+    if estado_juego == "INICIO" and demon_mode_desbloqueado:
+        iniciar_modo_juego("DEMON")
+
+
+ventana.listen()
+ventana.onkeypress(mover_arriba, "Up")
+ventana.onkeypress(mover_abajo, "Down")
+ventana.onkeypress(mover_izquierda, "Left")
+ventana.onkeypress(mover_derecha, "Right")
+ventana.onkeypress(realizar_ataque, "space")
+ventana.onkeypress(alternar_pausa, "z")
+ventana.onkeypress(alternar_pausa, "Z")
+ventana.onkeypress(salir_al_titulo, "x")
+ventana.onkeypress(salir_al_titulo, "X")
+ventana.onkeypress(procesar_enter, "Return")
+ventana.onkeypress(procesar_w, "w")
+ventana.onkeypress(procesar_w, "W")
+
+# Iniciar mostrando el menú
 mostrar_menu()
 
 # ==========================================
-# BUCLE PRINCIPAL (OPTIMIZADO CON ONTIMER)
+# BUCLE PRINCIPAL
 # ==========================================
 def bucle_principal():
     global estado_juego, salud_demonio, salud_heroe, demon_mode_desbloqueado
@@ -735,9 +731,9 @@ def bucle_principal():
             p.sety(p.ycor() + p.dy)
 
             dist_p = math.hypot(
-                p.xcor() - heroe.xcor(), p.ycor() - heroe.ycor()
+                p.xcor() - heroe.xcor(), p.ycor() - heroe.xcor()
             )
-            
+
             radio_impacto = 20 * p.tamano
             if dist_p < radio_impacto:
                 salud_heroe -= 60 if modo_actual == "DEMON" else 45
