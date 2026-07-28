@@ -17,7 +17,7 @@ demon_mode_desbloqueado = False
 modo_actual = "NORMAL"  # Puede ser "NORMAL" o "DEMON"
 
 # ==========================================
-# BALANCE DE BATALLA
+# BALANCE DE BATALLA Y FÍSICAS
 # ==========================================
 MAX_SALUD_HEROE = 3000
 MAX_SALUD_DEMONIO = 50000
@@ -303,6 +303,10 @@ class PersonajeTopDown:
         self.ocultar()
 
     def ir_a(self, x, y, angulo_capa=None):
+        # Limitar físicas de bordes para evitar salir de la arena
+        x = max(-340, min(340, x))
+        y = max(-240, min(240, y))
+
         self.cuerpo.goto(x, y)
 
         if self.es_heroe:
@@ -475,22 +479,22 @@ def mostrar_menu():
 # CONTROLES Y LÓGICA DE JUEGO
 # ==========================================
 def mover_arriba():
-    if estado_juego == "JUGANDO" and heroe.ycor() < 240:
+    if estado_juego == "JUGANDO":
         heroe.ir_a(heroe.xcor(), heroe.ycor() + 20, angulo_capa=270)
 
 
 def mover_abajo():
-    if estado_juego == "JUGANDO" and heroe.ycor() > -240:
+    if estado_juego == "JUGANDO":
         heroe.ir_a(heroe.xcor(), heroe.ycor() - 20, angulo_capa=90)
 
 
 def mover_izquierda():
-    if estado_juego == "JUGANDO" and heroe.xcor() > -340:
+    if estado_juego == "JUGANDO":
         heroe.ir_a(heroe.xcor() - 20, heroe.ycor(), angulo_capa=0)
 
 
 def mover_derecha():
-    if estado_juego == "JUGANDO" and heroe.xcor() < 340:
+    if estado_juego == "JUGANDO":
         heroe.ir_a(heroe.xcor() + 20, heroe.ycor(), angulo_capa=180)
 
 
@@ -520,7 +524,7 @@ def iniciar_modo_juego(modo):
     global estado_juego, salud_heroe, salud_demonio, modo_actual
     modo_actual = modo
     estado_juego = "JUGANDO"
-    
+
     titulo_txt.clear()
     hud.clear()
     dialogo.clear()
@@ -573,8 +577,8 @@ ventana.onkeypress(procesar_enter, "Return")
 ventana.onkeypress(procesar_w, "w")
 ventana.onkeypress(procesar_w, "W")
 
-# Iniciar mostrando el menú
 mostrar_menu()
+
 
 # ==========================================
 # BUCLE PRINCIPAL
@@ -718,7 +722,7 @@ def bucle_principal():
 
             tiempo_ultimo_ataque_t = tiempo_actual
 
-        # --- COLISIONES ---
+        # --- FÍSICAS DE COLISIONES CON PROYECTILES (CORREGIDO) ---
         for p in proyectiles[:]:
             if time.time() - p.tiempo_creacion < p.tiempo_congelar:
                 p.color("gold")
@@ -730,13 +734,26 @@ def bucle_principal():
             p.setx(p.xcor() + p.dx)
             p.sety(p.ycor() + p.dy)
 
+            # Distancia euclidiana corregida (Y del héroe en lugar de X)
             dist_p = math.hypot(
-                p.xcor() - heroe.xcor(), p.ycor() - heroe.xcor()
+                p.xcor() - heroe.xcor(), p.ycor() - heroe.ycor()
             )
 
-            radio_impacto = 20 * p.tamano
+            # Tamaño del hitbox según el tipo de bola de fuego
+            radio_impacto = 25 * p.tamano
             if dist_p < radio_impacto:
-                salud_heroe -= 60 if modo_actual == "DEMON" else 45
+                dano = 80 if modo_actual == "DEMON" else 55
+                salud_heroe -= dano
+
+                # FÍSICA DE EMPUJE (Knockback al recibir un disparo)
+                ang_impacto = math.atan2(
+                    heroe.ycor() - p.ycor(), heroe.xcor() - p.xcor()
+                )
+                heroe.ir_a(
+                    heroe.xcor() + math.cos(ang_impacto) * 25,
+                    heroe.ycor() + math.sin(ang_impacto) * 25,
+                )
+
                 p.hideturtle()
                 if p in proyectiles:
                     proyectiles.remove(p)
@@ -745,11 +762,18 @@ def bucle_principal():
                 if p in proyectiles:
                     proyectiles.remove(p)
 
+        # --- FÍSICA DE CONTACTO DIRECTO CON EL DEMONIO ---
         dist_contacto = math.hypot(
             demonio.xcor() - heroe.xcor(), demonio.ycor() - heroe.ycor()
         )
-        if dist_contacto < 45:
-            salud_heroe -= 6.0 if modo_actual == "DEMON" else 4.5
+        if dist_contacto < 50:
+            salud_heroe -= 10.0 if modo_actual == "DEMON" else 6.0
+
+            # FÍSICA DE EMPUJE POR CONTACTO
+            heroe.ir_a(
+                heroe.xcor() + math.cos(ang_demonio) * 15,
+                heroe.ycor() + math.sin(ang_demonio) * 15,
+            )
 
         if salud_demonio <= 0:
             salud_demonio = 0
@@ -826,6 +850,7 @@ def bucle_principal():
 
     ventana.update()
     ventana.ontimer(bucle_principal, 20)
+
 
 # Arrancar el bucle principal
 bucle_principal()
